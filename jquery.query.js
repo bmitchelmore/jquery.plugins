@@ -1,11 +1,11 @@
-/**
+﻿/**
  * jQuery.query - Query String Modification and Creation for jQuery
  * Written by Blair Mitchelmore (blair DOT mitchelmore AT gmail DOT com)
  * Licensed under the WTFPL (http://sam.zoy.org/wtfpl/).
- * Date: 2008/05/28
+ * Date: 2009/8/13
  *
  * @author Blair Mitchelmore
- * @version 2.0.1
+ * @version 2.1.6
  *
  **/
 new function(settings) { 
@@ -15,13 +15,14 @@ new function(settings) {
   var $suffix = settings.suffix === false ? '' : '[]';
   var $prefix = settings.prefix === false ? false : true;
   var $hash = $prefix ? settings.hash === true ? "#" : "?" : "";
+  var $numbers = settings.numbers === false ? false : true;
   
   jQuery.query = new function() {
     var is = function(o, t) {
       return o != undefined && o !== null && (!!t ? o.constructor == t : true);
     };
     var parse = function(path) {
-      var m, rx = /\[([^[]*)\]/g, match = /^(\S+?)(\[\S*\])?$/.exec(path), base = match[1], tokens = [];
+      var m, rx = /\[([^[]*)\]/g, match = /^([^[]+?)(\[.*\])?$/.exec(path), base = match[1], tokens = [];
       while (m = rx.exec(match[2])) tokens.push(m[1]);
       return [base, tokens];
     };
@@ -77,20 +78,22 @@ new function(settings) {
           if ($spaces) q = q.replace(/[+]/g,' '); // replace +'s with spaces
           
           jQuery.each(q.split(/[&;]/), function(){
-            var key = this.split('=')[0];
-            var val = this.split('=')[1];
+            var key = decodeURIComponent(this.split('=')[0] || "");
+            var val = decodeURIComponent(this.split('=')[1] || "");
             
             if (!key) return;
             
-            if (/^[+-]?[0-9]+\.[0-9]*$/.test(val)) // simple float regex
-              val = parseFloat(val);
-            else if (/^[+-]?[0-9]+$/.test(val)) // simple int regex
-              val = parseInt(val, 10);
+            if ($numbers) {
+              if (/^[+-]?[0-9]+\.[0-9]*$/.test(val)) // simple float regex
+                val = parseFloat(val);
+              else if (/^[+-]?[0-9]+$/.test(val)) // simple int regex
+                val = parseInt(val, 10);
+            }
             
             val = (!val && val !== 0) ? true : val;
             
             if (val !== false && val !== true && typeof val != 'number')
-              val = decodeURIComponent(val);
+              val = val;
             
             self.SET(key, val);
           });
@@ -145,6 +148,11 @@ new function(settings) {
         });
         return self;
       },
+      load: function(url) {
+        var hash = url.replace(/^.*?[#](.+?)(?:\?.+)?$/, "$1");
+        var search = url.replace(/^.*?[?](.+?)(?:#.+)?$/, "$1");
+        return new queryObject(url.length == search.length ? '' : search, url.length == hash.length ? '' : hash);
+      },
       empty: function() {
         return this.copy().EMPTY();
       },
@@ -176,12 +184,17 @@ new function(settings) {
       },
       toString: function() {
         var i = 0, queryString = [], chunks = [], self = this;
+        var encode = function(str) {
+          str = str + "";
+          if ($spaces) str = str.replace(/ /g, "+");
+          return encodeURIComponent(str);
+        };
         var addFields = function(arr, key, value) {
           if (!is(value) || value === false) return;
-          var o = [key];
+          var o = [encode(key)];
           if (value !== true) {
             o.push("=");
-            o.push(encodeURIComponent(value));
+            o.push(encode(value));
           }
           arr.push(o.join(""));
         };
