@@ -1,6 +1,7 @@
 /**
  *  jQuery Plugin highlightFade (jquery.offput.ca/highlightFade)
  *  (c) 2006 Blair Mitchelmore (offput.ca) blair@offput.ca
+ *  Licensed under the WTFPL (http://sam.zoy.org/wtfpl/).
  */
 /**
  * This is version 0.7 of my highlightFade plugin. It follows the yellow fade technique of Web 2.0 fame
